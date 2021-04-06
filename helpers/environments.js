@@ -3,6 +3,7 @@
  * Description: Handle all environment data related things
  * Author: Nazmul Huda
  * Date: 06/04/2021
+ * Commands: yarn start : listening stagging | NODE_ENV=production yarn start : listenting production
  */
 
 // Dependencies: 
