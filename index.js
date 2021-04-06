@@ -13,7 +13,7 @@ const {handleReqRes} = require('./helpers/handleReqRes')
 const handler = require('./helpers/handleReqRes')
 const data = require('./lib/data')
 
-// ----------------Working With File System------------------------ 
+// ----------------Working With File System (CRUD)------------------------ 
 // Write File: 
 /*data.create('test','newFile',{name:'Nazmul Huda', nationality:'Bangladeshi', age:25}, (err)=>{
     console.log(err)
@@ -26,6 +26,11 @@ const data = require('./lib/data')
 
 // Update File
 /*data.update('test','newFile',{name:'Sania Akter', nationality:'Bangladeshi', age:22}, (err)=>{
+    console.log(err)
+})*/
+
+// Delete File
+/*data.delete('test','newFile',(err)=>{
     console.log(err)
 })*/
 
