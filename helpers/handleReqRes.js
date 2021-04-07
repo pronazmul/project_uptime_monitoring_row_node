@@ -11,7 +11,8 @@ const url = require('url')
 const {StringDecoder} = require('string_decoder')
 const routes = require('../routes')
 const {notFoundHandler} = require('../handlers/routeHandlers/notFoundHandler')
-const { type } = require('os')
+const {parseJSON} = require('../helpers/utilities')
+
 
 //handler Object - Module Scaffolding
 const handler = {}
@@ -40,18 +41,6 @@ handler.handleReqRes = (req, res) =>{
     // Check route form route file if not found call not found handler
     const chosenHandler = routes[trimedPath] ? routes[trimedPath] : notFoundHandler
 
-    //Call Route Handlers: 
-    chosenHandler(requestProperties, (statusCode, payload)=>{
-        statusCode = typeof(statusCode) === 'number'? statusCode:500;
-        payload = typeof(payload) === 'object' ? payload : {}
-
-        const payloadString = JSON.stringify(payload)
-
-        res.writeHead(statusCode)
-        res.end(payloadString)
-    })
-
-
     //Get Body Data & Decode
     const decoder = new StringDecoder('utf-8')
     let realData = ''
@@ -62,8 +51,19 @@ handler.handleReqRes = (req, res) =>{
 
     req.on('end', ()=>{
         realData += decoder.end()
-        console.log(realData)
-        res.end(realData)
+
+        requestProperties.body = parseJSON(realData)
+
+        //Call Route Handlers: 
+        chosenHandler(requestProperties, (statusCode, payload)=>{
+            statusCode = typeof(statusCode) === 'number'? statusCode:500;
+            payload = typeof(payload) === 'object' ? payload : {}
+
+            const payloadString = JSON.stringify(payload)
+            res.setHeader('Content-Type', 'application/json')
+            res.writeHead(statusCode)
+            res.end(payloadString)
+        })
     })
 
 }

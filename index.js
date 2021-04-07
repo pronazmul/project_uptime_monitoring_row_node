@@ -10,7 +10,6 @@
 const http = require('http')
 const environment = require('./helpers/environments')
 const {handleReqRes} = require('./helpers/handleReqRes')
-const handler = require('./helpers/handleReqRes')
 const data = require('./lib/data')
 
 // ----------------Working With File System (CRUD)------------------------ 
