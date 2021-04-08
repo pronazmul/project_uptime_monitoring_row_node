@@ -29,7 +29,7 @@ const data = require('./lib/data')
 })*/
 
 // Delete File
-/*data.delete('test','newFile',(err)=>{
+/*data.delete('test','newFile',(e  rr)=>{
     console.log(err)
 })*/
 

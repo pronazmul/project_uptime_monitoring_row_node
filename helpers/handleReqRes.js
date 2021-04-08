@@ -51,10 +51,9 @@ handler.handleReqRes = (req, res) =>{
 
     req.on('end', ()=>{
         realData += decoder.end()
-
         requestProperties.body = parseJSON(realData)
 
-        //Call Route Handlers: 
+        // Call Route Handlers: 
         chosenHandler(requestProperties, (statusCode, payload)=>{
             statusCode = typeof(statusCode) === 'number'? statusCode:500;
             payload = typeof(payload) === 'object' ? payload : {}
