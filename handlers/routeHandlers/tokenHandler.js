@@ -17,7 +17,7 @@ const handler = {}
 handler.tokenHandler = (requestProperties, callBack)=>{
 
     handler._token ={}
-    // CRUD Token
+    // Token Create using phone number && Password checking by body
     handler._token.post=(requestProperties, callBack)=> {
         const phone = typeof(requestProperties.body.phone) === 'string' && requestProperties.body.phone.trim().length === 11 ? requestProperties.body.phone : false;
         const password = typeof(requestProperties.body.password) === 'string' && requestProperties.body.password.trim().length > 0 ? requestProperties.body.password : false;
@@ -50,7 +50,7 @@ handler.tokenHandler = (requestProperties, callBack)=>{
             callBack(400,{Error:"There was a  problem in your request"})
         }
     }
-    
+    // Read & sent to client token matching token id by querystring
     handler._token.get = (requestProperties, callBack)=>{
         const id = typeof(requestProperties.queryStringObject.id) === 'string' ? requestProperties.queryStringObject.id : false;
         if(id){
@@ -66,10 +66,49 @@ handler.tokenHandler = (requestProperties, callBack)=>{
             callBack(400, {Error:"Invalid Token ID"})
         }
     }
+    // UPdate Token expiration Time checking token time already expired or not.
+    handler._token.put = (requestProperties, callBack)=>{
+        const id = typeof(requestProperties.body.id) === 'string' ? requestProperties.body.id : false;
+        const expiration = typeof(requestProperties.body.expiration) === 'boolean' && requestProperties.body.expiration === true ? requestProperties.body.expiration : false;
 
-
-    handler._token.put = (requestProperties, callBack)=>{callBack(200,{Message:"WElcome Put Method"})}
-    handler._token.delete = (requestProperties, callBack)=>{callBack(200,{Message:"WElcome Delete Method"})}
+        if(id && expiration){
+            data.read('tokens',id,(error,tokenData)=>{
+                const parsedToken = parseJSON(tokenData)
+                if(!error){
+                    if(parsedToken.expiration > Date.now()){
+                        parsedToken.expiration = Date.now()+60*60*1000
+                        data.update('tokens',id,parsedToken,(error)=>{
+                            if(!error){
+                                callBack(200,{Message:"Expiration Time Successfully Updated"})
+                            }else{
+                                callBack(500,{Error:"There is an error in server side"})
+                            }
+                        })
+                    }else{
+                        callBack(400,{Error:"Token already expired"})
+                    }
+                }else{
+                    callBack(400,{Error:"There was a problem in your request"})
+                }
+            })
+        }else{
+            callBack(400,{Error:"There was a problem in your request"})
+        }
+    }
+    handler._token.delete = (requestProperties, callBack)=>{
+        const id = typeof(requestProperties.queryStringObject.id) === 'string' ? requestProperties.queryStringObject.id : false;
+        if(id){
+            data.delete('tokens',id,(err)=>{
+                if(!err){
+                    callBack(200, {Message: "Token Deleted Succcessfully"})
+                }else{
+                    callBack(400, {Error: "There was a problem in your request"})
+                }
+            })
+        }else{
+            callBack(400, {Error:"Invalid Token ID"})
+        }
+    }
 
     // Check Request Methods & Sent token to his desired request method...
     const acceptedMethods = ['get', 'post', 'put', 'delete']
