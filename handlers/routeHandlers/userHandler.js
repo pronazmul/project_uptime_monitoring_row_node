@@ -9,6 +9,7 @@
 // Dependencies
 const data = require('../../lib/data')
 const {hash} = require('../../helpers/utilities')
+const {parseJSON} = require('../../helpers/utilities')
 
 // Module Scaffolding
 const handler = {}
@@ -55,10 +56,79 @@ handler.userHandler = (requestProperties, callBack)=>{
         }
     }
     handler._users.get = (requestProperties, callBack)=>{
-        
+        const phone = typeof(requestProperties.queryStringObject.phone) === 'string' && requestProperties.queryStringObject.phone.trim().length === 11 ? requestProperties.queryStringObject.phone : false;
+        if(phone){
+            data.read('users',phone,(err, user)=>{
+                const {firstName, lastName, phone, tosAgreement} = {...parseJSON(user)}
+                const userToShow = {
+                    firstName,
+                    lastName,
+                    phone,
+                    tosAgreement
+                }
+                if(!err && userToShow){
+                    callBack(200, {user:userToShow})
+                }else{
+                    callBack(404, {Error: "Requested user was not found"})
+                }
+            })
+        }else{
+            callBack(400, {Error:"Phone number is not Valid"})
+        }
     }
-    handler._users.put = (requestProperties, callBack)=>{}
-    handler._users.delete = (requestProperties, callBack)=>{}
+    handler._users.put = (requestProperties, callBack)=>{
+        const firstName = typeof(requestProperties.body.firstName) === 'string' && requestProperties.body.firstName.trim().length > 0 ? requestProperties.body.firstName : false;
+        const lastName = typeof(requestProperties.body.lastName) === 'string' && requestProperties.body.lastName.trim().length > 0 ? requestProperties.body.lastName : false;
+        const phone = typeof(requestProperties.body.phone) === 'string' && requestProperties.body.phone.trim().length === 11 ? requestProperties.body.phone : false;
+        const password = typeof(requestProperties.body.password) === 'string' && requestProperties.body.password.trim().length > 0 ? requestProperties.body.password : false;
+        
+        if(phone){
+            if(firstName || lastName || password){
+                // Lookup the user: 
+                data.read('users',phone,(err, user)=>{
+                    const parsedUser = {...parseJSON(user)}
+                    if(!err && parsedUser){
+                        if(firstName){parsedUser.firstName=firstName}
+                        if(lastName){parsedUser.lastName=lastName}
+                        if(password){parsedUser.password= hash(password)}
+                        data.update('users', phone, parsedUser, (err)=>{
+                            if(!err){
+                                callBack(200, {Message: "User Updated Successfully"})
+                            }else{
+                                callBack(400, {Error:"There was a problem in your request"})
+                            }
+                        })
+                    }else{
+                        callBack(400, {Error:"There was a problem in your request"})
+                    }
+                })
+            }else{
+                callBack(400, {Error:"There was a problem in your request"})
+            }
+        }else{
+            callBack(400, {Error: "Your phone number is not valid! Please try again."})
+        }
+    }
+    handler._users.delete = (requestProperties, callBack)=>{
+        const phone = typeof(requestProperties.queryStringObject.phone) === 'string' && requestProperties.queryStringObject.phone.trim().length === 11 ? requestProperties.queryStringObject.phone : false;
+        if(phone){
+            data.read('users',phone,(err, user)=>{
+                if(!err && user){
+                    data.delete('users',phone,(err)=>{
+                        if(!err){
+                                callBack(200, {Message: "User Deleted Successfuly"})
+                        }else{
+                            callBack(500, {Error: "There was an error in server side"})
+                        }
+                    })            
+                }else{
+                    callBack(500, {Error: "There was an error in server side"})
+                }
+            })
+        }else{
+            callBack(400, {Error:"Phone number is not Valid"})
+        }
+    }
 
     // Check Request Methods & Sent user to his desired request method...
     const acceptedMethods = ['get', 'post', 'put', 'delete']
