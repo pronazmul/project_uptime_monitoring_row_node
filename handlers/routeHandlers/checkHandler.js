@@ -36,46 +36,48 @@ handler.checkHandler = (requestProperties, callBack)=>{
             const token = typeof(requestProperties.headersObject.token) === 'string'? requestProperties.headersObject.token : false
             if(token){
                 // Lookup the user phone by reading the token
-                data.read('tokens',token,(error,data) => {
-                    const {phone} = parseJSON(data)
+                data.read('tokens',token,(error,tokenData) => {
+                    const {phone} = parseJSON(tokenData)
                     if(!error && phone){
                         // Authenticate the user
                         tokenHandler._token.varify(token, phone, (isAuthenticated)=>{
                             if(isAuthenticated){
-                                // callBack(200, {token, phone, isAuthenticated})
-                                data.read('users', phone,(error, data)=>{
-                                    const userData = parseJSON(data)
-                                    callBack(200, {userData})
-                                    if(!error && userData){
-                                        const userChecks = typeof(userData.checks)=== 'object' && userData.checks instanceof Array ? userData.checks : []
-                                        if(userChecks.length < maxCheck){
-                                            const checkID = createRandomString(20)
-                                            const checkObject = {
-                                                id: checkID,
-                                                phone,
-                                                protocol,
-                                                url,
-                                                method,
-                                                successCode,
-                                                timeOutSecond,
-                                            }
-                                            // Create User Checks in checks folder
-                                            data.create('checks',checkID, checkObject,(error)=>{
-                                                if(!error){
-                                                    // Updata user with Check Id
-                                                    userData.checks = userChecks
-                                                    userData.checks.push(checkID)
-                                                    // Update user Data with new Check Id
-                                                    data.update('users', phone, userData, (error)=>{
+                                callBack(200, {token, phone, isAuthenticated})
+                                    data.read('users',phone, (error, user )=>{
+                                        const userData = parseJSON(user)
+                                        if(!error){
+                                            if(!error && userData){
+                                                const userChecks = typeof(userData.checks)=== 'object' && userData.checks instanceof Array ? userData.checks : []
+                                                if(userChecks.length < maxCheck){
+                                                    const checkID = createRandomString(20)
+                                                    const checkObject = {
+                                                        id: checkID,
+                                                        phone,
+                                                        protocol,
+                                                        url,
+                                                        method,
+                                                        successCode,
+                                                        timeOutSecond,
+                                                    }
+                                                    // Create User Checks in checks folder
+                                                    data.create('checks',checkID, checkObject,(error)=>{
                                                         if(!error){
-                                                            callBack(200, {checkObject})
+                                                            // Updata user with Check Id
+                                                            userData.checks = userChecks
+                                                            userData.checks.push(checkID)
+                                                            // Update user Data with new Check Id
+                                                            data.update('users', phone, userData, (error)=>{
+                                                                if(!error){
+                                                                    callBack(200, {checkObject})
+                                                                }else{callBack(500, {Error: "There was a problem in server side"})}
+                                                            })
                                                         }else{callBack(500, {Error: "There was a problem in server side"})}
                                                     })
-                                                }else{callBack(500, {Error: "There was a problem in server side"})}
-                                            })
-                                        }else{callBack(400,{Error:'Maximum Checks Limit Already Exists!'})}
-                                    }else{callBack(400, {Error:"User Not Exists!"})}
-                                })                                
+                                                }else{callBack(400,{Error:'Maximum Checks Limit Already Exists!'})}
+                                            }else{callBack(400, {Error:"User Not Exists!"})}
+                                        }
+                                        else{callBack(500,{Error: "Server side Error"})}
+                                    })
                             }else{callBack(403, {Error: "Authentication Failed!"})} 
                         })
                     }else{callBack(403, {Error: "Authentication Failed"})}
