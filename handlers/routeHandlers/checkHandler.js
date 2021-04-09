@@ -7,10 +7,10 @@
  */
 
 // Dependencies
+const { parseJSON, createRandomString } = require('../../helpers/utilities')
 const data = require('../../lib/data')
 const tokenHandler = require('./tokenHandler')
-// const {hash} = require('../../helpers/utilities')
-// const {parseJSON} = require('../../helpers/utilities')
+const {maxCheck} = require('../../helpers/environments')
 
 // Module Scaffolding
 const handler = {}
@@ -28,21 +28,62 @@ handler.checkHandler = (requestProperties, callBack)=>{
     handler._check.post=(requestProperties, callBack)=> {
         const protocol = typeof(requestProperties.body.protocol)==='string' && ['http','https'].indexOf(requestProperties.body.protocol) > -1 ? requestProperties.body.protocol : false
         const url = typeof(requestProperties.body.url) ==='string' && requestProperties.body.url.trim().length>0 ? requestProperties.body.url : false
-        const method = typeof(requestProperties.body.method)==='string' && ['get', 'post','put','delete'].indexOf(requestProperties.body.method)>-1 ? requestProperties.body.method : false
+        const method = typeof(requestProperties.body.method)==='string' && ['GET', 'POST','PUT','DELETE'].indexOf(requestProperties.body.method)>-1 ? requestProperties.body.method : false
         const successCode = typeof(requestProperties.body.successCode)==='object' && requestProperties.body.successCode instanceof Array ? requestProperties.body.successCode : false
         const timeOutSecond = typeof(requestProperties.body.timeOutSecond)==='number' && requestProperties.body.timeOutSecond % 1 === 0 && requestProperties.body.timeOutSecond >= 1 && requestProperties.body.timeOutSecond <=5 ? requestProperties.body.timeOutSecond : false
 
         if(protocol && url && method && successCode && timeOutSecond){
             const token = typeof(requestProperties.headersObject.token) === 'string'? requestProperties.headersObject.token : false
             if(token){
-                tokenHandler._token.varify(token, phone, (tokenID)=>{
-                   if(tokenID){
-
-                   }else{callBack(403, {Error: "Authentication Failed."})} 
+                // Lookup the user phone by reading the token
+                data.read('tokens',token,(error,data) => {
+                    const {phone} = parseJSON(data)
+                    if(!error && phone){
+                        // Authenticate the user
+                        tokenHandler._token.varify(token, phone, (isAuthenticated)=>{
+                            if(isAuthenticated){
+                                // callBack(200, {token, phone, isAuthenticated})
+                                data.read('users', phone,(error, data)=>{
+                                    const userData = parseJSON(data)
+                                    callBack(200, {userData})
+                                    if(!error && userData){
+                                        const userChecks = typeof(userData.checks)=== 'object' && userData.checks instanceof Array ? userData.checks : []
+                                        if(userChecks.length < maxCheck){
+                                            const checkID = createRandomString(20)
+                                            const checkObject = {
+                                                id: checkID,
+                                                phone,
+                                                protocol,
+                                                url,
+                                                method,
+                                                successCode,
+                                                timeOutSecond,
+                                            }
+                                            // Create User Checks in checks folder
+                                            data.create('checks',checkID, checkObject,(error)=>{
+                                                if(!error){
+                                                    // Updata user with Check Id
+                                                    userData.checks = userChecks
+                                                    userData.checks.push(checkID)
+                                                    // Update user Data with new Check Id
+                                                    data.update('users', phone, userData, (error)=>{
+                                                        if(!error){
+                                                            callBack(200, {checkObject})
+                                                        }else{callBack(500, {Error: "There was a problem in server side"})}
+                                                    })
+                                                }else{callBack(500, {Error: "There was a problem in server side"})}
+                                            })
+                                        }else{callBack(400,{Error:'Maximum Checks Limit Already Exists!'})}
+                                    }else{callBack(400, {Error:"User Not Exists!"})}
+                                })                                
+                            }else{callBack(403, {Error: "Authentication Failed!"})} 
+                        })
+                    }else{callBack(403, {Error: "Authentication Failed"})}
                 })
             }else{callBack(400, {Error: "There was a problem in your request"})}
-        }else{callBack(400, "There was a problem in your request")}
+        }else{callBack(400, {Error: "There was a problem in your request"})}
     }
+
     handler._check.get = (requestProperties, callBack)=>{callBack(200,{Message: "This is from GEt Request"})}
     handler._check.put = (requestProperties, callBack)=>{callBack(200,{Message: "This is from put request"})}
     handler._check.delete = (requestProperties, callBack)=>{callBack(200,{Message: "This is from Delete request"})}

@@ -16,14 +16,16 @@ const environments = {}
 environments.staging = {
     port: 3000,
     envName: 'staging',
-    secretKey: 'nazmul'
+    secretKey: 'nazmul',
+    maxCheck :5
 }
 
 // production Ennvironment Data Declared
 environments.production = {
     port: 5000,
     envName: 'production',
-    secretKey: 'nazmulPro'
+    secretKey: 'nazmulPro',
+    maxCheck:5
 }
 
 // Determine which environment was passed
