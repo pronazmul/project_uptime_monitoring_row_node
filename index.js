@@ -1,53 +1,28 @@
 /*
-*Title: Uptime URL Monitoring Application
-*Description: A Restfull Api to monitor up or down time of user defined links.
+*Title: Project initial File
+*Description: Initial file to start the node server & workers
 *Author: Nazmul Huda
-*Date: 06/04/21
+*Date: 11/04/21
 *
 */
 
 // Dependencies: 
-const http = require('http')
-const environment = require('./helpers/environments')
-const {handleReqRes} = require('./helpers/handleReqRes')
-const data = require('./lib/data')
-
-// ----------------Working With File System (CRUD)------------------------ 
-// Write File: 
-/*data.create('test','newFile',{name:'Nazmul Huda', nationality:'Bangladeshi', age:25}, (err)=>{
-    console.log(err)
-})*/
-
-// Read File: 
-/*data.read('test','newfile',(err, data)=>{
-    console.log(data)
-})*/
-
-// Update File
-/*data.update('test','newFile',{name:'Sania Akter', nationality:'Bangladeshi', age:22}, (err)=>{
-    console.log(err)
-})*/
-
-// Delete File
-/*data.delete('test','newFile',(e  rr)=>{
-    console.log(err)
-})*/
+const server = require('./lib/server')
+const worker = require('./lib/worker')
 
 //app object - module scaffolding
 const app = {}
 
-
-// Create server
-app.createServer = ()=>{
-   const server =  http.createServer(app.handleReqRes)
-   server.listen(environment.port, ()=>{
-       console.log(`Listening to port ${environment.port}`)
-   })
+// Initialize Application
+app.init = ()=>{
+    // Start the server
+    server.init()
+    // Start the background worker process
+    worker.init()
 }
 
-// Handle Request Response 
-app.handleReqRes = handleReqRes
+// Start the Appliaction
+app.init()
 
-
-// Start The Server: 
-app.createServer()
+// Module Export 
+module.exports = app

@@ -17,7 +17,12 @@ environments.staging = {
     port: 3000,
     envName: 'staging',
     secretKey: 'nazmul',
-    maxCheck :5
+    maxCheck :5,
+    twilio:{
+        fromPhone: "",
+        accountSid: '',
+        authToken: ''
+    }
 }
 
 // production Ennvironment Data Declared
@@ -25,7 +30,12 @@ environments.production = {
     port: 5000,
     envName: 'production',
     secretKey: 'nazmulPro',
-    maxCheck:5
+    maxCheck:5,
+    twilio:{
+        fromPhone: "",
+        accountSid: '',
+        authToken: ''
+    }
 }
 
 // Determine which environment was passed
