@@ -1,6 +1,6 @@
 ## A Restful Uptime Monitoring API Application.
 
-####Features: 
+####Features:  
 
     - Start the API Server.
     - Create, Edit, Delete (CRUD) user. 
